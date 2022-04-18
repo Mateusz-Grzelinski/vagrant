@@ -1,0 +1,20 @@
+---
+- name: Install all applications with basic configuration
+  hosts: all
+  become: true
+  tasks:
+    - name: Quality of life
+      package:
+        name:
+          - zsh
+          - tldr
+          - bat
+        state: present
+  vars:
+    docker_users:
+      - panda
+      - vagrant
+  roles:
+    # - user
+    # - packages
+    - geerlingguy.docker

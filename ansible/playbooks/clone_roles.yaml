@@ -1,0 +1,19 @@
+---
+- name: Clone roles to be used inside VM
+  hosts: all
+  become: true
+  vars:
+    git_repository: "https://github.com/Mateusz-Grzelinski/ansible_roles.git"
+    git_branch: "main"
+    git_destination: "/etc/ansible/roles"
+  tasks:
+    - name: Create a directory if it does not exist
+      file:
+        path: "{{ git_destination }}"
+        state: directory
+        mode: '0755'
+    - name: Git checkout
+      git:
+        repo: "{{ git_repository }}"
+        dest: "{{ git_destination }}"
+        version: "{{ git_branch }}"
