@@ -1,36 +1,42 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
+VAGRANT_COMMAND = ARGV[0]
 
 Vagrant.configure("2") do |config|
   config.vm.box = "bento/ubuntu-20.04"
-  # config.vm.guest = :linux
-  # config.vm.box = "generic/alpine315"
 
-  # sometimes ceftificate provider might not be resolved by DNS
-  # config.vm.box_download_insecure = true
-
-  config.vm.provider "hyperv" do |hv|
-    hv.vmname = "hyperv-vagrant-ansible-demo-vm-ubuntu"
-    hv.cpus = "2"
-    hv.memory = "2048"
-    # hv.enable_enhanced_session_mode = true
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+    v.cpus = 1
   end
-
-  # config.vm.provision "shell", inline: "ls"
-  # config.vm.synced_folder ".", "/vagrant", :extra => "ro", create: true, owner: "vagrant", group: "vagrant"
+  config.vm.network "private_network", ip: "192.168.44.44"
 
   config.vm.provision "ansible_local" do |ansible|
-    ansible.galaxy_role_file = "ansible/requirements.yml"
+    ansible.playbook = "ansible/playbooks/clone_roles.yml"
+    ansible.extra_vars = {
+      git_repository: "https://github.com/Mateusz-Grzelinski/ansible_roles.git",
+      git_branch: "main",
+    }
+  end
+
+  config.vm.provision "ansible_local" do |ansible|
+    ansible.playbook = "ansible/playbooks/install_tools.yml"
+  end
+
+  config.vm.provision "ansible_local" do |ansible|
+    ansible.galaxy_role_file = "requirements.yml"
     ansible.galaxy_roles_path = "/etc/ansible/roles"
     ansible.galaxy_command = "sudo ansible-galaxy install --role-file=%{role_file} --roles-path=%{roles_path}"
-    ansible.playbook = "ansible/playbooks/install_tools.yaml"
+    ansible.playbook = "playbooks/init.yml"
   end
 
   config.vm.provision "ansible_local" do |ansible|
-    # ansible.become = true
-    ansible.playbook = "ansible/playbooks/clone_roles.yaml"
-    # ansible.limit = "all"
+    ansible.playbook = "playbooks/infrastructure.yml"
+    ansible.extra_vars = {
+      git_repository: "https://github.com/Mateusz-Grzelinski/infrastructure.git",
+      git_branch: "main",
+    }
   end
 
-  # config.vm.box_check_update = false
+  if VAGRANT_COMMAND == "ssh"
+    config.ssh.username = "panda"
+  end
 end
